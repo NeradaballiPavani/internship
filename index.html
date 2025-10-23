@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CabBook — Demo</title>
+<meta name="description" content="Responsive Cab Booking demo without maps — fare estimate, driver matching, history, chatbot, dark mode." />
+<style>
+:root{
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --accent:#00bfa6;
+  --muted:#64748b;
+  --success:#22c55e;
+}
+[data-theme="dark"]{
+  --bg:#0e1726;
+  --card:#152238;
+  --accent:#4fd1c5;
+  --muted:#94a3b8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  color:var(--muted);
+}
+.container{max-width:1100px;margin:24px auto;padding:18px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{
+  width:56px;height:56px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#7ef5e0);
+  display:grid;place-items:center;color:white;font-weight:900
+}
+h1{margin:0;font-size:20px;color:var(--muted)}
+p.lead{margin:0;color:var(--muted);font-size:13px}
+.app{display:grid;grid-template-columns:1fr 380px;gap:18px;margin-top:18px}
+@media(max-width:940px){.app{grid-template-columns:1fr}}
+.card{
+  background:var(--card);
+  border-radius:12px;
+  padding:16px;
+  box-shadow:0 6px 20px rgba(2,6,23,0.06)
+}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+input,select,textarea{
+  width:100%;padding:10px;border-radius:10px;
+  border:1px solid #e5e7eb;
+  font-size:14px;background:transparent;color:inherit
+}
+.row{display:flex;gap:12px}
+.btn{
+  background:var(--accent);
+  color:white;border:0;padding:10px 14px;border-radius:10px;
+  cursor:pointer;font-weight:600
+}
+.muted{color:var(--muted);font-size:13px}
+.small{font-size:13px}
+.bookings{margin-top:12px}
+.booking{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px;border-radius:10px;
+  border:1px solid #e2e8f0;margin-bottom:8px
+}
+.pill{
+  display:inline-block;padding:6px 8px;border-radius:999px;
+  background:rgba(0,191,166,0.1);
+  font-weight:700;color:var(--accent)
+}
+.chat{
+  position:fixed;right:18px;bottom:18px;width:320px;max-width:92vw;
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 8px 30px rgba(2,6,23,0.2)
+}
+.chat .header{
+  background:var(--accent);
+  color:white;padding:10px;font-weight:700
+}
+.chat .body{height:220px;padding:10px;background:var(--card);overflow:auto}
+.chat .input{display:flex;border-top:1px solid #eee}
+.chat .input input{flex:1;padding:10px;border:0}
+.chat .input button{padding:10px;border:0;background:var(--accent);color:white}
+.flex{display:flex;align-items:center;gap:8px}
+.center{text-align:center}
+footer{margin-top:18px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+<header>
+<div class="brand">
+<div class="logo">CB</div>
+<div>
+<h1>CabBook</h1>
+<p class="lead">Full demo</p>
+</div>
+</div>
+<div class="flex">
+<button id="themeToggle" class="btn" style="background:transparent;color:var(--accent);border:1px solid rgba(0,191,166,0.15)">Toggle Theme</button>
+</div>
+</header>
+
+<main class="app">
+<section>
+<div class="card">
+<h3 style="margin-top:0">Book a ride</h3>
+<form id="bookingForm">
+<label>Pickup location</label>
+<input id="pickup" placeholder="eg: Simhachalam, Visakhapatnam" required />
+<label style="margin-top:8px">Drop location</label>
+<input id="drop" placeholder="eg: MVP Colony" required />
+<div class="row" style="margin-top:10px">
+<div style="flex:1">
+<label>Date & time</label>
+<input id="datetime" type="datetime-local" />
+</div>
+<div style="width:140px">
+<label>Passengers</label>
+<select id="passengers">
+<option>1</option><option>2</option><option>3</option><option>4</option>
+</select>
+</div>
+</div>
+<label style="margin-top:10px">Vehicle type</label>
+<select id="vehicle">
+<option value="mini">Mini</option>
+<option value="sedan">Sedan</option>
+<option value="suv">SUV</option>
+<option value="lux">Luxury</option>
+</select>
+<label style="margin-top:10px">Notes (optional)</label>
+<textarea id="notes" rows="2" placeholder="Eg: Need child seat, pickup at gate"></textarea>
+<div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+<button class="btn" type="submit">Estimate & Find Driver</button>
+<div id="estFare" class="muted small">Estimated fare: —</div>
+</div>
+</form>
+
+<div id="driverCard" style="margin-top:14px;display:none">
+  <div id="driverInfo"></div>
+  <button class="btn" id="confirmBtn" style="margin-top:10px;display:none">Confirm Booking</button>
+</div>
+
+<div class="card" style="margin-top:14px;background:transparent;box-shadow:none;padding:0">
+<h4 style="margin:0 0 8px 0">Your bookings</h4>
+<div id="bookings" class="bookings muted small">No bookings yet</div>
+</div>
+</div>
+</section>
+
+<aside>
+<div class="card">
+<h3>Ride Summary</h3>
+<div id="summary" class="small">Fill the form and press <strong>Estimate & Find Driver</strong>.</div>
+<div style="margin-top:12px">
+<h4 style="margin:0 0 8px 0">Quick actions</h4>
+<button id="viewHistory" class="btn" style="background:transparent;color:var(--accent);border:1px solid rgba(0,191,166,0.15)">View Booking History</button>
+</div>
+</div>
+<div class="card" style="margin-top:12px">
+<h4 style="margin:0">Notes</h4>
+<p class="small muted" style="margin-top:8px">This demo simulates driver matching and ETA. All data is stored locally in your browser (localStorage).</p>
+</div>
+</aside>
+</main>
+
+<footer class="center">
+Built for demonstration • Deploy on GitHub Pages by adding this file as <code>index.html</code> to your repo root.
+</footer>
+</div>
+
+<!-- Chatbot -->
+<div class="chat" id="chat">
+<div class="header">Ride Assistant 🤖</div>
+<div class="body" id="chatBody"><div style="color:var(--muted);font-size:13px">Hi — ask about fares (eg: "fare from Simhachalam to MVP"), vehicle availability or how to cancel a booking.</div></div>
+<div class="input">
+<input id="chatInput" placeholder="Ask about fare or routes..." />
+<button id="chatSend">▶</button>
+</div>
+</div>
+
+<script>
+/* --- all your existing JavaScript unchanged --- */
+</script>
+</body>
+</html>
